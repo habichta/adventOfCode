@@ -1,31 +1,34 @@
-import numpy as np, matplotlib.pyplot as plt, collections as co
+import numpy as np, matplotlib.pyplot as plt, collections as co, math
 from scipy.spatial import Voronoi, voronoi_plot_2d
 def find_region_with_voronoi(data): #O(K (N log(N)))
     vor, areas, points, areas_points = Voronoi(np.array(data)),[],[],[]
     for pr in vor.point_region:
         re = vor.regions[pr]
         if not -1 in re:
+            vertices = [vor.vertices[i] for i in re]
             ridges = [sorted([x, y]) for x, y in zip(re[:-1], re[1:])] + [sorted([re[0], re[-1]])]
             points = [list(vor.ridge_points[i]) for i,rpoint in enumerate(vor.ridge_vertices) if sorted(rpoint) in ridges]
             c = co.Counter([p for sl in points for p in sl])
             center_point, peripheral_points = [list(vor.points[x[0]]) for x in c.items() if x[1]>1],[list(vor.points[x[0]]) for x in c.items() if x[1]==1]
-            areas_points.append([center_point,peripheral_points])
+            areas_points.append([center_point,peripheral_points, vertices])
     voronoi_plot_2d(vor)
     plt.show()
     return areas_points
 def area_c(points):
-    x_coord, x_center = [x[0] for x in points[1]], points[0][0][0]
-    y_coord, y_center = [x[1] for x in points[1]], points[0][0][1]
+    print(points[2])
+    print(points[1])
+    x_coord, x_center = [math.ceil(x[0]) for x in points[2]], points[0][0][0]
+    y_coord, y_center = [math.ceil(x[1]) for x in points[2]], points[0][0][1]
     x_min,y_min,x_max,y_max = int(min(x_coord)), int(min(y_coord)), int(max(x_coord)), int(max(y_coord))
     area = 0
-    print(x_center,y_center)
-    for x in range(0,390):
-        for y in range(0,390):
-
+    print(x_center,y_center,x_min,x_max,y_min,y_max)
+    if any([x_max,x_min,y_min,y_max]) > 390 or any([x_max,x_min,y_min,y_max]) < 0: return -1
+    for x in range(x_min-1,x_max+1):
+        for y in range(y_min-1,y_max+1):
             diff_p = [abs(int(p[0])-x)+abs(int(p[1])-y) for p in points[1]]
             diff_c = abs(int(x_center)-x)+abs(int(y_center-y))
             if diff_c < min(diff_p):
-                area+=1
+                    area+=1
 
     return area
 
