@@ -1,63 +1,34 @@
 import collections as co
-from heapq import heappush, heappop
+from heapq import heappush
 class Step():
     def __init__(self):
         self.name=''
-        self.depends_on = set()
-        self.followed_by = set()
+        self.depends_on = list()
+        self.followed_by = list()
 
-
-done = set()
-cache = []
-order = []
 steps = co.defaultdict(lambda : Step())
+seen = list()
 
-def go(seen_i):
-    if len(seen_i) > 0:
-        next = heappop(seen_i)
-        print(next)
-        if all([i in done for i in steps[next].depends_on]):
-            print(next)
-            if next not in done:order.append(next)
-            done.add(next)
-            for follow_i in steps[next].followed_by: heappush(seen_i, follow_i)
-            return seen_i
-        else:
-            seen_after = go(seen_i)
-            heappush(seen_after,next)
-            return seen_after
-    else:
-        return seen_i
-
+def dfs_rec(start,path):
+    path = path + [start]
+    for follow in steps[start].followed_by: seen.append(follow)
+    for edge in sorted(seen):
+        if edge not in path and all([x in path for x in steps[edge].depends_on]):
+            seen.pop(0)
+            path = dfs_rec(edge,path)
+    return path
 
 with open('input.txt') as f:
     for line in f:
         l = line.rstrip().split(' ')
         steps[l[7]].name, steps[l[1]].name = l[7],l[1]
-        steps[l[7]].depends_on.add(l[1])
-        steps[l[1]].followed_by.add(l[7])
-
-    start = [(name,obj) for name,obj in steps.items() if len(obj.depends_on) == 0]
-
-    order.append(start[0][0])
-    done.add(start[0][0])
-    seen = []
-    for follow in start[0][1].followed_by: heappush(seen,follow)
-    while(len(seen) > 0):
-        seen = go(seen)
-
-
-    print(''.join(order))
-
-
-
-
-
-
-
-    #while(len[seen] > 0):
-
-
+        heappush(steps[l[7]].depends_on,l[1])
+        heappush(steps[l[1]].followed_by,l[7])
+    starts = [(name,obj) for name,obj in steps.items() if len(obj.depends_on) == 0]
+    for l in starts:
+        heappush(steps[l[0]].depends_on, '0')
+        heappush(steps['0'].followed_by, l[0])
+    print(''.join(dfs_rec('0',[])))
 
 
 
